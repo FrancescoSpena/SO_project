@@ -19,5 +19,4 @@ typedef struct {
 } FakeProcess;
 
 int FakeProcess_load(FakeProcess* p, const char* filename);
-
 int FakeProcess_save(const FakeProcess* p, const char* filename);

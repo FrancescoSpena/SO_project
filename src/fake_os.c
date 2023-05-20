@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "fake_os.h"
+#include "../include/fake_os.h"
+#define OUT_OF_RANGE -1
+#define MIN_BURST 1000
 
 void FakeOS_init(FakeOS *os){
     List_init(&os->running);
@@ -18,6 +20,7 @@ void FakeOS_init(FakeOS *os){
 //Return a pid of indexed process in running
 int FakeOS_pidToList(ListHead l, int index){
     ListItem* aux = l.first;
+    if(index >= l.size) exit(OUT_OF_RANGE);
     int i = 0;
     while(aux){
         FakePCB* pcb = (FakePCB*)aux;
@@ -25,6 +28,7 @@ int FakeOS_pidToList(ListHead l, int index){
         ++i;
         aux=aux->next;
     }
+    exit(OUT_OF_RANGE);
 }
 
 void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
@@ -33,8 +37,20 @@ void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
     //check if the running, ready or waiting list have the same pid
     for(int i=0; i < os->num_cpu; i++){
         assert(FakeOS_pidToList(os->running,i) != p->pid);
-        assert(FakeOS_pidToList(os->ready,i) != p->pid);
-        assert(FakeOS_pidToList(os->waiting,i) != p->pid);
+    }
+
+    ListItem* aux=os->ready.first;
+    while(aux){
+        FakePCB* pcb=(FakePCB*)aux;
+        assert(pcb->pid!=p->pid && "pid taken");
+        aux=aux->next;
+    }
+
+    aux=os->waiting.first;
+    while(aux){
+        FakePCB* pcb=(FakePCB*)aux;
+        assert(pcb->pid!=p->pid && "pid taken");
+        aux=aux->next;
     }
 
     // all fine, no such pcb exists
@@ -120,4 +136,32 @@ void FakeOS_simStep(FakeOS* os){
 
     //TODO insert part to running
 
+}
+
+//Guardo la lista dei processi ready
+//Controllo se l'evento è di tipo CPU 
+//in tal caso guardo la durata e scelgo quello più piccolo
+FakePCB* FakeOS_minProcess(FakeOS* os){
+    //check
+    assert(os->ready.first);
+    ListItem* aux = os->ready.first;
+    int min = MIN_BURST;
+    int index = 0;
+    int ret = 0;
+    while(aux){
+        FakePCB* pcb = (FakePCB*)aux;
+        assert(pcb->events.first);
+        ProcessEvent* e = (ProcessEvent*)pcb->events.first;
+        //controllo ridondante poichè 
+        //i processi in ready sono solo CPU 
+        if(e->type == CPU){
+            if(e->duration < min){
+                min = e->duration;
+                ret = index;
+            }
+        }
+        ++index;
+        aux=aux->next;
+    }
+    return (FakePCB*)List_popToIndex(&os->ready,ret);
 }

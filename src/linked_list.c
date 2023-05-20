@@ -1,4 +1,4 @@
-#include "linked_list.h"
+#include "../include/linked_list.h"
 #include <assert.h>
 
 void List_init(ListHead* head) {
@@ -90,3 +90,13 @@ ListItem* List_popFront(ListHead* head) {
   return List_detach(head, head->first);
 }
 
+ListItem* List_popToIndex(ListHead* head, int index){
+  ListItem* aux = head->first;
+  int i = 0;
+  while(aux){
+    if(i == index) return List_detach(head,aux);
+    ++i;
+    aux = aux->next;
+  }
+  return 0;
+}
