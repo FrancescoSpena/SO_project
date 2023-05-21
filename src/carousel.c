@@ -4,6 +4,8 @@
 
 #include "../include/fake_os.h"
 
+#define NUM_CPU 2
+
 FakeOS os;
 
 typedef struct{
@@ -19,47 +21,29 @@ void schedSJF(FakeOS *os, void* args_){
         return;
     }
 
-    //Calcolo la durata del prossimo quantum
-
-    /*
-    Guardo nella lista dei processi ready e scelgo quello con 
-    CPU burst più piccolo. Controllo la lista dei processi running
-        - Se ogni processo in running a CPU burst più piccolo di 
-        quello che ho scelto non modifico niente altrimenti prendo quello
-        con CPU burst più grande, lo rimuovo dalla lista di running e 
-        aggiungo quello scelto
-        - Aggiorno la durata del burst facendo la differenza con la durata
-        del quantum calcolato
-    */
-
+    //check if all cpu are busy
+    //if the number of busy < total num of cpu
+    //_______________
+        //Add process to ready list to running 
+        //in cpu, set the status = running and 
+        //add to running list
+    //_______________
+        /*
+        For each cpu check the status and if the 
+        cpu burst of process in running is > 
+        new select process cpu burst change else 
+        do nothing.
+        */
+    //_______________
 
 }
 
 int main(int argc, char** argv){
-    printf("Go\n");
-    FakeOS_init(&os);
+    printf("Go the carousel\n");
+    FakeOS_init(&os, NUM_CPU);
 
     //TODO scheduler args
 
-
-    for (int i=1; i<argc; ++i){
-        FakeProcess new_process;
-        int num_events=FakeProcess_load(&new_process, argv[i]);
-        printf("loading [%s], pid: %d, events:%d",
-            argv[i], new_process.pid, num_events);
-        if (num_events) {
-        FakeProcess* new_process_ptr=(FakeProcess*)malloc(sizeof(FakeProcess));
-        *new_process_ptr=new_process;
-        List_pushBack(&os.processes, (ListItem*)new_process_ptr);
-        }
-    }
-    printf("num processes in queue %d\n", os.processes.size);
-    while(os.running.first
-            || os.ready.first
-            || os.waiting.first
-            || os.processes.first){
-        FakeOS_simStep(&os);
-    }
 
     return 0;
 }
