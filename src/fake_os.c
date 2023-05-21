@@ -19,10 +19,9 @@ void FakeOS_init(FakeOS *os, int num_cpu){
     os->num_cpu=num_cpu;
 
     for(int i=0; i < os->num_cpu; i++){
-        FakeCPU* cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
-        cpu->list->next = cpu->list->prev = 0;
-        cpu->status=STOP;
-        List_pushBack(&os->cpu,(ListItem*)cpu);
+        FakeCPU* one_cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
+        one_cpu->status=STOP;
+        List_pushBack(&os->cpu,(ListItem*)one_cpu);
     }
 }
 
