@@ -7,6 +7,7 @@
 
 //Inizialized a FakeOS
 void FakeOS_init(FakeOS *os, int num_cpu){
+    List_init(&os->cpu);
     List_init(&os->running);
     List_init(&os->ready);
     List_init(&os->waiting);
@@ -17,6 +18,7 @@ void FakeOS_init(FakeOS *os, int num_cpu){
     os->schedule_args=0;
     os->tot_num_cpu=num_cpu;
     os->busy_cpu=0;
+    os->time_process_execution = (int*)malloc(sizeof(int)*num_cpu);
 }
 
 
@@ -138,8 +140,15 @@ void FakeOS_simStep(FakeOS* os){
     // if event over, destroy event
     // and reschedule process
     // if last event, destroy running
-    FakePCB* running = (FakePCB*)List_popFront(&os->running);
-    printf("\trunning pid: %d\n", running ? running->pid:-1);
+    FakePCB* running = (FakePCB*)os->running.first;
+    ListItem* ciao = os->running.first;
+    printf("\trunning pid: ");
+    while(ciao){
+        FakePCB* pcb = (FakePCB*)ciao;
+        printf("%d ", pcb->pid);
+        ciao=ciao->next;
+    }
+    printf("\n");
     if(running){
         ProcessEvent* e = (ProcessEvent*)running->events.first;
         //destroy all if not type CPU
@@ -168,8 +177,11 @@ void FakeOS_simStep(FakeOS* os){
                         break;
                 }
             }
+            List_detach(&os->running,(ListItem*)running);
+            List_detach(&os->cpu,(ListItem*)running);
+            os->busy_cpu--;
         }
-        os->busy_cpu--;
+
     }
 
     printf("Call Scheduler\n");

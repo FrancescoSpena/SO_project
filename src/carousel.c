@@ -64,14 +64,21 @@ void schedSJF(FakeOS *os, void* args_){
     */
 
     //If same cpu in free add a process
+    printf("CPU occupate = %d\n", os->busy_cpu);
     if(os->busy_cpu < os->tot_num_cpu){
+        printf("Qualche CPU libera\n");
         FakePCB* run = (FakePCB*)List_popFront(&os->ready);
         List_pushBack(&os->running,(ListItem*)run);
+        FakeCPU* cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
+        assert(cpu);
+        cpu->execution = run;
         os->busy_cpu++;
+        printf("processo scelto\n");
     }
     //If all cpu is busy, find to ready queue the process with
     //min burst and change with the process'burst to high.
     else{
+        printf("Sono tutte occupate\n");
         //Take a process with min burst
         FakePCB* min = minBurst(&os->ready);
         assert(min->events.first);
@@ -108,9 +115,15 @@ void schedSJF(FakeOS *os, void* args_){
         //If find process with burst > min burst, remove to
         //running queue and add the new min process
         if(flag == 1){
+            printf("Effettuo una sostituzione\n");
             List_detach(&os->running,(ListItem*)ret);
+            List_detach(&os->cpu,(ListItem*)ret);
             List_pushBack(&os->running,(ListItem*)min);
+            FakeCPU* cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
+            cpu->execution = min;
+            List_pushBack(&os->cpu,(ListItem*)min);
         } 
+        printf("Processo scelto (caso non libere)\n");
     }
 
 
@@ -139,7 +152,7 @@ int main(int argc, char** argv){
     for(int i=2; i < argc; i++){
         FakeProcess new_process;
         int num_events = FakeProcess_load(&new_process,argv[i]);
-        printf("loading [%s], pid: %d, events:%d",
+        printf("loading [%s], pid: %d, events:%d\n",
            argv[i], new_process.pid, num_events);
         
         if(num_events){
@@ -148,7 +161,7 @@ int main(int argc, char** argv){
             List_pushBack(&os.processes,(ListItem*)new_process_ptr);
         }
     }
-    printf("\nnum core selected %d\n", os.num_cpu);
+    printf("\nnum core selected %d\n", os.tot_num_cpu);
     printf("num processes in queue %d\n", os.processes.size);
 
     while(os.running.first
