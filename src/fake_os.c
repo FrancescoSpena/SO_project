@@ -7,7 +7,6 @@
 
 //Inizialized a FakeOS
 void FakeOS_init(FakeOS *os, int num_cpu){
-    List_init(&os->cpu);
     List_init(&os->running);
     List_init(&os->ready);
     List_init(&os->waiting);
@@ -16,13 +15,8 @@ void FakeOS_init(FakeOS *os, int num_cpu){
     os->timer=0;
     os->schedule_fn=0;
     os->schedule_args=0;
-    os->num_cpu=num_cpu;
-
-    for(int i=0; i < os->num_cpu; i++){
-        FakeCPU* one_cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
-        one_cpu->status=STOP;
-        List_pushBack(&os->cpu,(ListItem*)one_cpu);
-    }
+    os->tot_num_cpu=num_cpu;
+    os->busy_cpu=0;
 }
 
 
@@ -81,6 +75,7 @@ void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
 void FakeOS_simStep(FakeOS* os){
     
     printf("************** TIME: %08d **************\n", os->timer);
+    printf("number of active CPUs %d/%d\n", os->busy_cpu,os->tot_num_cpu);
 
     //scan process waiting to be started
     //and create all processes starting now
@@ -143,7 +138,7 @@ void FakeOS_simStep(FakeOS* os){
     // if event over, destroy event
     // and reschedule process
     // if last event, destroy running
-    FakePCB* running = (FakePCB*)os->running.first;
+    FakePCB* running = (FakePCB*)List_popFront(&os->running);
     printf("\trunning pid: %d\n", running ? running->pid:-1);
     if(running){
         ProcessEvent* e = (ProcessEvent*)running->events.first;
@@ -173,23 +168,16 @@ void FakeOS_simStep(FakeOS* os){
                         break;
                 }
             }
-            //Delete the first to the running list
-            List_popFront(&os->running);
         }
+        os->busy_cpu--;
     }
 
-    //if not running process call the scheduler
-    if(os->schedule_fn && !os->running.first){
-        (*os->schedule_fn)(os,os->schedule_args);
+    printf("Call Scheduler\n");
+    if(os->schedule_fn){
+        (*os->schedule_fn)(os, os->schedule_args); 
     }
 
-    // if running not defined and ready queue not empty
-    // put the first in ready to run
-    if(!os->running.first && os->ready.first){
-        ListItem* first_ready = List_popFront(&os->ready);
-        List_pushBack(&os->running,first_ready);
-    }
-
+    printf("update timer\n");
     ++os->timer;
 
 }
