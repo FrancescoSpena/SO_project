@@ -37,7 +37,6 @@ FakePCB* minBurst(ListHead* ready){
         aux=aux->next;
     }
     List_detach(ready,(ListItem*)ret);
-    printf("min burst find, burst = %d\n", min);
     return ret;
 }
 
@@ -68,11 +67,16 @@ void schedSJF(FakeOS *os, void* args_){
     if(os->busy_cpu < os->tot_num_cpu){
         printf("Qualche CPU libera\n");
         FakePCB* run = (FakePCB*)List_popFront(&os->ready);
+        printf("Aggiungo il processo alla running queue\n");
         List_pushBack(&os->running,(ListItem*)run);
+        printf("Scheduler, size running list: %d\n", os->running.size);
         FakeCPU* cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
         assert(cpu);
-        cpu->execution = run;
+        cpu->execution=run;
         os->busy_cpu++;
+        printf("Aggiungo una nuova cpu\n");
+        List_pushBack(&os->cpu,(ListItem*)cpu);
+        printf("Scheduler, size cpu list: %d\n", os->cpu.size);
         printf("processo scelto\n");
     }
     //If all cpu is busy, find to ready queue the process with
@@ -122,11 +126,11 @@ void schedSJF(FakeOS *os, void* args_){
             FakeCPU* cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
             cpu->execution = min;
             List_pushBack(&os->cpu,(ListItem*)min);
+            return;
         } 
-        printf("Processo scelto (caso non libere)\n");
+        printf("Processo scelto (caso non libere) ma No sostituito\n");
     }
-
-
+    return;
 }
 
 int main(int argc, char** argv){

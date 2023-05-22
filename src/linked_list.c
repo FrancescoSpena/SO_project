@@ -49,7 +49,7 @@ ListItem* List_insert(ListHead* head, ListItem* prev, ListItem* item) {
     head->first=item;
   if(!next)
     head->last=item;
-  ++head->size;
+  head->size=head->size+1;
   return item;
 }
 
@@ -73,7 +73,7 @@ ListItem* List_detach(ListHead* head, ListItem* item) {
     head->first=next;
   if (item==head->last)
     head->last=prev;
-  head->size--;
+  head->size=head->size-1;
   item->next=item->prev=0;
   return item;
 }

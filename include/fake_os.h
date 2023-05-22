@@ -9,6 +9,7 @@ typedef struct{
 }FakePCB;
 
 typedef struct{
+    ListItem list;
     FakePCB* execution;
     int time_exection;
 }FakeCPU;
@@ -26,7 +27,6 @@ typedef struct FakeOS{
     void* schedule_args;
     int tot_num_cpu;
     int busy_cpu;
-    int *time_process_execution;
     ListHead processes;
 }FakeOS;
 
