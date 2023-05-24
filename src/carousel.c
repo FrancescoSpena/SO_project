@@ -48,5 +48,6 @@ int main(int argc, char **argv){
            os.processes.first){
         FakeOS_simStep(&os);
     }
+    printf("END\n");
     return 0;
 }
