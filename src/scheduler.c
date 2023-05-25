@@ -48,33 +48,7 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
         if(run->events.first != 0){
             ProcessEvent* e = (ProcessEvent*)run->events.first;
             if(e->type == CPU && e->duration > curr_quantum){
-                ProcessEvent* qe = (ProcessEvent*)malloc(sizeof(ProcessEvent));
-                qe->list.prev = qe->list.next=0;
-                qe->type = CPU;
-                qe->duration = curr_quantum;
-                e->duration -= curr_quantum;
-                List_pushFront(&run->events,(ListItem*)qe);
-                if(!os->ready.first){
-                    List_detach(&os->running,(ListItem*)run);
-                    return;
-                }
-                FakePCB* min = (FakePCB*)minBurst(&os->ready);
-                if(!min){
-                    printf("process NULL\n");
-                    return;
-                }
-                if(!min->events.first){
-                    printf("Process not event\n");
-                    return;
-                }
-                ProcessEvent* e_min = (ProcessEvent*)min->events.first;
-                if(e_min->type != CPU){
-                    printf("No CPU\n");
-                    return;
-                }
-                List_detach(&os->running,(ListItem*)run);
-                List_pushBack(&os->running,(ListItem*)min);
-                printf("quantum finish, change process\n");
+                //TODO costuire una bit map e successivamente levare tutti quelli con 1
             }
         }
         aux=aux->next;
@@ -91,15 +65,13 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
             ProcessEvent* e_run = (ProcessEvent*)run->events.first;
             if(e_run->type == CPU && e_run->duration > max){
                 max = e_run->duration;
-                change->events = run->events;
-                change->list = run->list;
-                change->pid = run->pid;
+                change = run;
             }
         }
         aux=aux->next;
     }
 
-    if(max != 0){
+    if(max > 0){
         FakePCB* min = (FakePCB*)minBurst(&os->ready);
         printf("pid change: %d, pid min: %d\n", change->pid,min->pid);
         ProcessEvent* e_change = (ProcessEvent*)change->events.first;
