@@ -1,5 +1,9 @@
 #include "../include/scheduler.h"
 
+void updateQuantum(SchedSJFArgs *a){
+    a->next_quantum = a->alpha * a->curr_quantum + (1 - a->alpha) * a->pred_quantum;
+}
+
 
 void choiceProcessFreeCPU(FakeOS *os){
     if(os == NULL) return;

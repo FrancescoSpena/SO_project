@@ -12,7 +12,7 @@ typedef struct{
 } SchedSJFArgs;
 
 //Update value of quantum
-void updateQuantum(SchedSJFArgs *args);
+void updateQuantum(SchedSJFArgs *a);
 //Return the process with min burst
 FakePCB *minBurst(ListHead *ready);
 //Update all event of running queue
