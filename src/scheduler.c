@@ -1,6 +1,6 @@
 #include "../include/scheduler.h"
 
-//Return the process with min burst
+//Return the process with min burst, remove the min burst process to the list
 ListItem *minBurst(ListHead *ready){
     if(ready->first == 0) return 0;
 
@@ -19,9 +19,7 @@ ListItem *minBurst(ListHead *ready){
         }
         aux=aux->next;
     }
-    ListItem* ret = List_detach(ready,(ListItem*)min_proc);
-    if(ret == 0) printf("min burst NULL\n");
-    return ret;
+    return List_detach(ready,(ListItem*)min_proc);
 }
 
 //Update value of quantum
@@ -43,15 +41,46 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     
     //Preemptive
     ListItem* aux = os->running.first;
-    while(aux){
+    ListItem* aux_2 = os->running.first;
+    while(aux_2){
         FakePCB* run = (FakePCB*)aux;
         if(run->events.first != 0){
             ProcessEvent* e = (ProcessEvent*)run->events.first;
             if(e->type == CPU && e->duration > curr_quantum){
-                //TODO costuire una bit map e successivamente levare tutti quelli con 1
+                printf("pid: %d, timeout quantum of %d\n", run->pid,curr_quantum);
+                ProcessEvent* qe = (ProcessEvent*)malloc(sizeof(ProcessEvent));
+                qe->list.prev=qe->list.next=0; 
+                qe->type=CPU;
+                qe->duration=curr_quantum;
+                e->duration-=curr_quantum;
+                List_pushFront(&run->events, (ListItem*)qe);
+                //Remove to running
+                List_detach(&os->running,(ListItem*)run);
+                //Take process min burst
+                if(!os->ready.first){
+                    return;
+                }
+                FakePCB* min = (FakePCB*)minBurst(&os->ready);
+                if(!min){
+                    printf("Process NULL\n");
+                    return;
+                }
+                if(!min->events.first){
+                    printf("Process not event\n");
+                    return;
+                }
+                ProcessEvent* e_min = (ProcessEvent*)min->events.first;
+                if(e_min->type != CPU){
+                    printf("No CPU\n");
+                    return;
+                }
+                printf("Tutti i check per min passati\n");
+                //Add to running
+                List_pushBack(&os->running,(ListItem*)min);
             }
         }
-        aux=aux->next;
+        aux_2=aux_2->next;
+        aux=aux_2;
     }
 
     //CPU busy
