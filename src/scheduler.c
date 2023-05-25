@@ -40,10 +40,48 @@ void choiceProcessFreeCPU(FakeOS *os){
 void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     if(os == 0 || curr_quantum < 0) return;
     printf("busy CPU\n");
-    //Preemptive
     
-    //CPU busy
+    //Preemptive
     ListItem* aux = os->running.first;
+    while(aux){
+        FakePCB* run = (FakePCB*)aux;
+        if(run->events.first != 0){
+            ProcessEvent* e = (ProcessEvent*)run->events.first;
+            if(e->type == CPU && e->duration > curr_quantum){
+                ProcessEvent* qe = (ProcessEvent*)malloc(sizeof(ProcessEvent));
+                qe->list.prev = qe->list.next=0;
+                qe->type = CPU;
+                qe->duration = curr_quantum;
+                e->duration -= curr_quantum;
+                List_pushFront(&run->events,(ListItem*)qe);
+                if(!os->ready.first){
+                    List_detach(&os->running,(ListItem*)run);
+                    return;
+                }
+                FakePCB* min = (FakePCB*)minBurst(&os->ready);
+                if(!min){
+                    printf("process NULL\n");
+                    return;
+                }
+                if(!min->events.first){
+                    printf("Process not event\n");
+                    return;
+                }
+                ProcessEvent* e_min = (ProcessEvent*)min->events.first;
+                if(e_min->type != CPU){
+                    printf("No CPU\n");
+                    return;
+                }
+                List_detach(&os->running,(ListItem*)run);
+                List_pushBack(&os->running,(ListItem*)min);
+                printf("quantum finish, change process\n");
+            }
+        }
+        aux=aux->next;
+    }
+
+    //CPU busy
+    aux = os->running.first;
     int max = 0;
     FakePCB* change = (FakePCB*)malloc(sizeof(FakePCB));
     assert(change);
