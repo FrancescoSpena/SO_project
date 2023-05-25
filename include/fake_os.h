@@ -8,17 +8,10 @@ typedef struct{
     ListHead events;
 }FakePCB;
 
-typedef struct{
-    ListItem list;
-    FakePCB* execution;
-    int time_exection;
-}FakeCPU;
-
 struct FakeOS;
 typedef void(*ScheduleFn)(struct FakeOS* os, void* args);
 
 typedef struct FakeOS{
-    ListHead cpu;
     ListHead running; 
     ListHead ready;
     ListHead waiting;
@@ -26,7 +19,6 @@ typedef struct FakeOS{
     ScheduleFn schedule_fn;
     void* schedule_args;
     int tot_num_cpu;
-    int busy_cpu;
     ListHead processes;
 }FakeOS;
 

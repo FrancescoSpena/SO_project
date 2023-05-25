@@ -91,6 +91,7 @@ ListItem* List_popFront(ListHead* head) {
 }
 
 ListItem* List_popToIndex(ListHead* head, int index){
+  if(index >= head->size || head->first == 0) return 0;
   ListItem* aux = head->first;
   int i = 0;
   while(aux){

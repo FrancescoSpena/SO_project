@@ -11,14 +11,7 @@ typedef struct{
     float alpha;
 } SchedSJFArgs;
 
-//Update value of quantum
-void updateQuantum(SchedSJFArgs *a);
-//Return the process with min burst
-FakePCB *minBurst(ListHead *ready);
-//Update all event of running queue
-void updateEvent(ListHead *cpu);
-//Change a process max burst with min
-void changeProcess(FakeOS* os, FakePCB* min);
+
 // Routine free cpu
 void choiceProcessFreeCPU(FakeOS *os);
 // Routine busy cpu

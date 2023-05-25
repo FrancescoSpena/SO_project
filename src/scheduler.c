@@ -1,27 +1,91 @@
 #include "../include/scheduler.h"
 
+//Return the process with min burst
+ListItem *minBurst(ListHead *ready){
+    if(ready->first == 0) return 0;
+
+    ListItem* aux = (ListItem*)ready->first;
+    int min = 1000;
+    FakePCB* min_proc = (FakePCB*)malloc(sizeof(FakePCB));
+    assert(min_proc);
+    while(aux){
+        FakePCB* r = (FakePCB*)aux;
+        if(r->events.first != 0){
+            ProcessEvent* e = (ProcessEvent*)r->events.first;
+            if(e->type == CPU && e->duration < min){
+                min = e->duration;
+                min_proc = r;
+            }
+        }
+        aux=aux->next;
+    }
+    ListItem* ret = List_detach(ready,(ListItem*)min_proc);
+    if(ret == 0) printf("min burst NULL\n");
+    return ret;
+}
+
+//Update value of quantum
 void updateQuantum(SchedSJFArgs *a){
     a->next_quantum = a->alpha * a->curr_quantum + (1 - a->alpha) * a->pred_quantum;
 }
 
-
 void choiceProcessFreeCPU(FakeOS *os){
-    if(os == NULL) return;
-    printf("CPU busy %d/%d\n", os->cpu.size,os->tot_num_cpu);
-    printf("Prendo un nuovo processo ready\n");
-    FakePCB* new_run = (FakePCB*)List_popFront(&os->ready);
-    printf("Controllo se è CPU\n");
-    ProcessEvent* e = (ProcessEvent*)new_run->events.first;
-    assert(e->type == CPU);
-    printf("Aggiungo alla lista dei running, adesso size = %d\n", os->running.size);
-    List_pushBack(&os->running,(ListItem*)new_run);
-    printf("Size lista running = %d\n", os->running.size);
-    printf("Creo una nuova CPU\n");
-    FakeCPU* new_cpu = (FakeCPU*)malloc(sizeof(FakeCPU));
-    new_cpu->execution = new_run;
-    printf("Aggiungo alla lista delle cpu, adesso size = %d\n", os->cpu.size);
-    List_pushBack(&os->cpu,(ListItem*)new_cpu);
-    printf("Size lista cpu = %d\n", os->cpu.size);
+    if(os == 0) return;
+    printf("Free CPU\n");
+    FakePCB* p = (FakePCB*)List_popFront(&os->ready);
+    List_pushBack(&os->running,(ListItem*)p);
+    return;
+}
+
+void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
+    if(os == 0 || curr_quantum < 0) return;
+    printf("busy CPU\n");
+    //Preemptive
+    
+    //CPU busy
+    ListItem* aux = os->running.first;
+    int max = 0;
+    FakePCB* change = (FakePCB*)malloc(sizeof(FakePCB));
+    assert(change);
+    while(aux){
+        FakePCB* run = (FakePCB*)aux;
+        if(run->events.first){
+            ProcessEvent* e_run = (ProcessEvent*)run->events.first;
+            if(e_run->type == CPU && e_run->duration > max){
+                max = e_run->duration;
+                change->events = run->events;
+                change->list = run->list;
+                change->pid = run->pid;
+            }
+        }
+        aux=aux->next;
+    }
+
+    if(max != 0){
+        FakePCB* min = (FakePCB*)minBurst(&os->ready);
+        printf("pid change: %d, pid min: %d\n", change->pid,min->pid);
+        ProcessEvent* e_change = (ProcessEvent*)change->events.first;
+        if(!min){
+            printf("Process NULL\n");
+            return;
+        }
+        if(!min->events.first){
+            printf("Process not event\n");
+            return;
+        }
+        ProcessEvent* e_min = (ProcessEvent*)min->events.first;
+        if(e_min->type != CPU){
+            printf("No CPU\n");
+            return;
+        }
+        if(e_change->duration > e_min->duration){
+            List_detach(&os->running,(ListItem*)change);
+            List_pushBack(&os->running,(ListItem*)min);
+            printf("Process change\n");
+            return;
+        } 
+        printf("Process not change\n");
+    }
     return;
 }
 
@@ -29,9 +93,16 @@ void schedSJF(FakeOS *os, void *args_){
     if(os == 0) return;
     SchedSJFArgs* args = (SchedSJFArgs*)args_;
 
-    if(os->ready.first == 0) return;
+    if(os->ready.first == 0){
+        printf("No ready processes\n");
+        return;
+    }
 
-    if(os->cpu.size < os->tot_num_cpu) choiceProcessFreeCPU(os);
-    else printf("not implemented\n");
-    return;
+    updateQuantum(args);
+
+    if(os->running.size < os->tot_num_cpu){
+        choiceProcessFreeCPU(os);
+    }else{
+        choiceProcessBusyCPU(os,args->curr_quantum);
+    }
 }

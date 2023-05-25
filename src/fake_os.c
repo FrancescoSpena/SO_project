@@ -7,7 +7,6 @@
 
 //Inizialized a FakeOS
 void FakeOS_init(FakeOS *os, int num_cpu){
-    List_init(&os->cpu);
     List_init(&os->running);
     List_init(&os->ready);
     List_init(&os->waiting);
@@ -17,7 +16,6 @@ void FakeOS_init(FakeOS *os, int num_cpu){
     os->schedule_fn=0;
     os->schedule_args=0;
     os->tot_num_cpu=num_cpu;
-    os->busy_cpu=0;
 }
 
 //Create a process (check if the process already exists)
@@ -149,32 +147,14 @@ void handlerWaitingProcess(FakeOS* os){
     return;
 }
 
-void detachProcessCPU(FakeOS* os, FakePCB* remove){
-    if(!os) return;
-    ListItem* aux = os->cpu.first;
-    int i = 0;
-    while(aux){
-        FakeCPU* cpu = (FakeCPU*)aux;
-        if(cpu->execution == remove) break;
-        i++;
-        aux=aux->next;
-    }
-    //aggiorna la size della lista
-    List_popToIndex(&os->cpu,i);
-}
-
 //Routine for running process
 void handlerRunningProcess(FakeOS* os){
     if(os == 0) return;
-    if(os->running.size != os->cpu.size){
-        printf("# processi != # cpu\n");
-        return;
-    }
+
     pidProcess(&os->running,"running");
     ListItem* aux = (ListItem*)os->running.first;
     while(aux){
         FakePCB* run = (FakePCB*)aux;
-        assert(run->events.first);
         ProcessEvent* e = (ProcessEvent*)run->events.first;
         assert(e->type == CPU);
         e->duration--;
@@ -185,25 +165,22 @@ void handlerRunningProcess(FakeOS* os){
             free(e);
             if(!run->events.first){
                 printf("\t\tpid: %d, end process\n", run->pid);
-                //levi dalla lista dei running MODIFICA SIZE -1
-                ListItem* ret = List_detach(&os->running,(ListItem*)run);
-                //levi la cpu che esegue questo processo MODIFICA SIZE -1
-                detachProcessCPU(os,(FakePCB*)ret);
+                List_detach(&os->running,(ListItem*)run);
             }else{
                 e = (ProcessEvent*)run->events.first;
                 switch(e->type){
                     case CPU:
                         printf("\t\tpid: %d, move to ready\n", run->pid);
                         ListItem* ret = List_detach(&os->running,(ListItem*)run);
-                        detachProcessCPU(os,(FakePCB*)ret);
                         List_pushBack(&os->ready,ret);
                         break;
                     case IO:
                         printf("\t\tpid: %d, move to waiting\n", run->pid);
                         ret = List_detach(&os->running,(ListItem*)run);
-                        detachProcessCPU(os,(FakePCB*)ret);
                         List_pushBack(&os->waiting,ret);
                         break;
+                    default:
+                        assert("illegal source\n");
                 }
             }
         }
@@ -214,7 +191,7 @@ void handlerRunningProcess(FakeOS* os){
 //Implement one step of simulation
 void FakeOS_simStep(FakeOS* os){
     printf("************** TIME: %08d **************\n", os->timer);
-    printf("number of active CPUs %d/%d\n", os->cpu.size,os->tot_num_cpu);
+    printf("number of active CPUs %d/%d\n", os->running.size,os->tot_num_cpu);
 
     /*
     Scan process waiting to be started and create all processes
