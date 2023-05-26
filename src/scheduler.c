@@ -80,7 +80,7 @@ void cpuBusy(FakeOS* os){
 }
 
 //routine for timeout 
-int timeoutQuantum(FakeOS* os, FakePCB* run, int curr_quantum){
+int timeoutQuantum(FakeOS* os, FakePCB* run, ListHead* temp, int curr_quantum){
     if(os == 0 || curr_quantum < 0 || run == 0) return -1;
     if(run->events.first){
         ProcessEvent* e = (ProcessEvent*)run->events.first;
@@ -113,7 +113,7 @@ int timeoutQuantum(FakeOS* os, FakePCB* run, int curr_quantum){
                     printf("No CPU\n");
                     return -1;
                 }
-                List_pushBack(&os->running,(ListItem*)min);
+                List_pushBack(temp,(ListItem*)min);
                 List_pushBack(&os->ready,(ListItem*)ret);
                 return 1;
             }else return 0;
@@ -135,16 +135,29 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     printf("busy CPU\n");
     printf("curr quantum = %d\n", curr_quantum);
     int flag = 0;
+    ListHead* temp = (ListHead*)malloc(sizeof(ListHead));
+    List_init(temp);
     //Preemptive
     ListItem* aux = os->running.first;
     while(aux){
         FakePCB* run = (FakePCB*)aux;
-        if(timeoutQuantum(os,run,curr_quantum)){
+        if(timeoutQuantum(os,run,temp,curr_quantum)){
             printf("pid: %d, timeout\n",run->pid);
+            aux=os->running.first;
             flag = 1;
-        }
-        aux=aux->next;
+        }else aux=aux->next;
     }
+
+    printf("size temp: %d\n", temp->size);
+    int i = temp->size;
+    while(i != 0){
+        ListItem* ret = List_popFront(temp);
+        List_pushBack(&os->running,(ListItem*)ret);
+        i--;
+    }
+
+    printf("size temp: %d\n", temp->size);  
+    printf("size running: %d\n", os->running.size);
 
     if(flag == 1) return;
 
