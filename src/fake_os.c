@@ -124,8 +124,8 @@ void handlerWaitingProcess(FakeOS* os){
             free(e);
             List_detach(&os->waiting, (ListItem*)pcb);
             if(!pcb->events.first){
-                printf("pid: %d, end process\n", pcb->pid);
-                free(pcb);
+                printf("\t\tpid: %d, end process in waiting\n", pcb->pid);
+                List_detach(&os->waiting,(ListItem*)pcb);
             }else{
                 e = (ProcessEvent*)pcb->events.first;
                 switch(e->type){
@@ -153,9 +153,8 @@ void handlerRunningProcess(FakeOS* os){
 
     pidProcess(&os->running,"running");
     ListItem* aux = (ListItem*)os->running.first;
-    ListItem* aux_2 = (ListItem*)os->running.first;
     while(aux){
-        FakePCB* run = (FakePCB*)aux_2;
+        FakePCB* run = (FakePCB*)aux;
         ProcessEvent* e = (ProcessEvent*)run->events.first;
         assert(e->type == CPU);
         e->duration--;
@@ -165,9 +164,8 @@ void handlerRunningProcess(FakeOS* os){
             List_popFront(&run->events);
             free(e);
             if(!run->events.first){
-                printf("\t\tpid: %d, end process\n", run->pid);
-                FakePCB* delete = run;
-                List_detach(&os->running,(ListItem*)delete);
+                printf("\t\tpid: %d, end process in running\n", run->pid);
+                List_detach(&os->running,(ListItem*)run);
             }else{
                 e = (ProcessEvent*)run->events.first;
                 switch(e->type){
@@ -187,7 +185,6 @@ void handlerRunningProcess(FakeOS* os){
             }
         }
         aux=aux->next;
-        aux_2=aux;
     }
 }
 
