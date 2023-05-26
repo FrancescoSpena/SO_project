@@ -124,7 +124,7 @@ void handlerWaitingProcess(FakeOS* os){
             free(e);
             List_detach(&os->waiting, (ListItem*)pcb);
             if(!pcb->events.first){
-                printf("\t\tpid: %d, end process in waiting\n", pcb->pid);
+                printf("\t\tpid: %d, end process\n", pcb->pid);
                 List_detach(&os->waiting,(ListItem*)pcb);
             }else{
                 e = (ProcessEvent*)pcb->events.first;
@@ -164,7 +164,7 @@ void handlerRunningProcess(FakeOS* os){
             List_popFront(&run->events);
             free(e);
             if(!run->events.first){
-                printf("\t\tpid: %d, end process in running\n", run->pid);
+                printf("\t\tpid: %d, end process\n", run->pid);
                 List_detach(&os->running,(ListItem*)run);
             }else{
                 e = (ProcessEvent*)run->events.first;
@@ -200,13 +200,10 @@ void FakeOS_simStep(FakeOS* os){
 
     //Routine for processes queue
     handlerProcess(os);
-    printf("Complete routine 1\n");
     //Routine for waiting queue
     handlerWaitingProcess(os);
-    printf("Complete routine 2\n");
     //Routine for running queue
     handlerRunningProcess(os);
-    printf("Complete routine 3\n");
 
     printf("Call scheduler\n");
     // call schedule, if defined
@@ -219,7 +216,7 @@ void FakeOS_simStep(FakeOS* os){
         assert(ret);
     }
 
-    printf("Update timer\n");
+    
     ++os->timer;
 
 }

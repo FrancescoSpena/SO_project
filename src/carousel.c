@@ -16,12 +16,19 @@ int main(int argc, char **argv){
 
     printf("Go the carousel\n");
     int num_cpu = atoi(argv[1]);
-    FakeOS_init(&os, num_cpu);
+
+    //a little bit of "balsamo"
+    if(num_cpu <=0){
+        printf("\na system with 0 cpu? :(\n");
+        printf("I set it for you to 1\n");
+        printf("------------------------\n\n");
+        FakeOS_init(&os, 1);
+    }else FakeOS_init(&os, num_cpu);
 
     // scheduler args
     SchedSJFArgs srr_args;
     srr_args.curr_quantum = srr_args.pred_quantum = 2;
-    srr_args.alpha = 0.3;
+    srr_args.alpha = 0;
     srr_args.next_quantum = 0;
     os.schedule_fn = schedSJF;
     os.schedule_args = &srr_args;

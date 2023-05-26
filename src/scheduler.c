@@ -1,5 +1,9 @@
 #include "../include/scheduler.h"
 
+/*
+##########internal function###############
+*/
+
 //Return the process with min burst, remove the min burst process to the list
 ListItem *minBurst(ListHead *ready){
     if(ready->first == 0) return 0;
@@ -122,6 +126,7 @@ int timeoutQuantum(FakeOS* os, FakePCB* run, ListHead* temp, int curr_quantum){
     return -1;
 }
 
+//routine to free cpu
 void choiceProcessFreeCPU(FakeOS *os){
     if(os == 0) return;
     printf("Free CPU\n");
@@ -130,10 +135,10 @@ void choiceProcessFreeCPU(FakeOS *os){
     return;
 }
 
+//routine to busy cpu
 void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     if(os == 0 || curr_quantum < 0) return;
-    printf("busy CPU\n");
-    printf("curr quantum = %d\n", curr_quantum);
+    printf("All CPU busy\n");
     int flag = 0;
     ListHead* temp = (ListHead*)malloc(sizeof(ListHead));
     List_init(temp);
@@ -142,13 +147,12 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     while(aux){
         FakePCB* run = (FakePCB*)aux;
         if(timeoutQuantum(os,run,temp,curr_quantum)){
-            printf("pid: %d, timeout\n",run->pid);
+            printf("pid: %d, timeout, quantum set to: %d\n",run->pid,curr_quantum);
             aux=os->running.first;
             flag = 1;
         }else aux=aux->next;
     }
 
-    printf("size temp: %d\n", temp->size);
     int i = temp->size;
     while(i != 0){
         ListItem* ret = List_popFront(temp);
@@ -156,8 +160,6 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
         i--;
     }
 
-    printf("size temp: %d\n", temp->size);  
-    printf("size running: %d\n", os->running.size);
 
     if(flag == 1) return;
 
@@ -167,6 +169,11 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     
 }
 
+/*
+##########internal function###############
+*/
+
+//scheduler
 void schedSJF(FakeOS *os, void *args_){
     if(os == 0) return;
     SchedSJFArgs* args = (SchedSJFArgs*)args_;
