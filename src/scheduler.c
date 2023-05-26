@@ -27,83 +27,10 @@ void updateQuantum(SchedSJFArgs *a){
     a->next_quantum = a->alpha * a->curr_quantum + (1 - a->alpha) * a->pred_quantum;
 }
 
-
-void choiceProcessFreeCPU(FakeOS *os){
+//routine for cpu busy
+void cpuBusy(FakeOS* os){
     if(os == 0) return;
-    printf("Free CPU\n");
-    FakePCB* p = (FakePCB*)List_popFront(&os->ready);
-    List_pushBack(&os->running,(ListItem*)p);
-    return;
-}
-
-void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
-    if(os == 0 || curr_quantum < 0) return;
-    printf("busy CPU\n");
-    printf("curr quantum = %d\n", curr_quantum);
-    
-    int flag = 0;
-    //Preemptive
     ListItem* aux = os->running.first;
-    int i = 0;
-    while(aux){
-        FakePCB* run = (FakePCB*)aux;
-        if(run->events.first != 0){
-            ProcessEvent* e = (ProcessEvent*)run->events.first;
-            if(e->type == CPU && e->duration > curr_quantum){
-                printf("pid: %d, timeout quantum of %d\n", run->pid,curr_quantum);
-                ProcessEvent* qe = (ProcessEvent*)malloc(sizeof(ProcessEvent));
-                qe->list.prev=qe->list.next=0; 
-                qe->type=CPU;
-                qe->duration=curr_quantum;
-                e->duration-=curr_quantum;
-                List_pushFront(&run->events, (ListItem*)qe);
-                //Remove to running
-                ListItem* ret = List_detach(&os->running,(ListItem*)run);
-                printf("Remove process to running\n");
-
-                //Restore aux
-                //Fare funzioni separate e fare in modo che
-                //quando si ha un timeout venga notificato e si riparte 
-                //da capo per il controllo (sperando di non avere problemi)
-                //con gli ultimi aggiunti
-                aux=os->running.first;
-
-                //Take process min burst
-                if(!os->ready.first){
-                    return;
-                }
-                FakePCB* min = (FakePCB*)minBurst(&os->ready);
-                if(!min){
-                    printf("Process NULL\n");
-                    return;
-                }
-                if(!min->events.first){
-                    printf("Process not event\n");
-                    return;
-                }
-                ProcessEvent* e_min = (ProcessEvent*)min->events.first;
-                if(e_min->type != CPU){
-                    printf("No CPU\n");
-                    return;
-                }
-                //Add to running
-                printf("Add process pid min: %d to running\n", min->pid);
-                List_pushBack(&os->running,(ListItem*)min);
-                List_pushBack(&os->ready,(ListItem*)ret);
-                
-                //Active flag
-                flag = 1;
-            }else printf("Process in run event IO\n");
-        }else printf("Process in run not event\n");
-        aux=aux->next;
-        i++;
-    }
-    printf("aux 0\n");
-
-    if(flag == 1) return;
-
-    //CPU busy
-    aux = os->running.first;
     int max = 0;
     FakePCB* change = (FakePCB*)malloc(sizeof(FakePCB));
     assert(change);
@@ -145,12 +72,86 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
             printf("Process change\n");
             return;
         }
-        //if not change the min process readd to ready because do a pop
-        //of list
+        //if not change the min process re-add to ready 
         List_pushBack(&os->ready,(ListItem*)min);
         printf("Process not change\n");
     }
     return;
+}
+
+//routine for timeout 
+int timeoutQuantum(FakeOS* os, FakePCB* run, int curr_quantum){
+    if(os == 0 || curr_quantum < 0 || run == 0) return -1;
+    if(run->events.first){
+        ProcessEvent* e = (ProcessEvent*)run->events.first;
+        if(e->type == CPU){
+            if(e->duration > curr_quantum){
+                ProcessEvent* qe = (ProcessEvent*)malloc(sizeof(ProcessEvent));
+                qe->list.prev=qe->list.next=0;
+                qe->type=CPU;
+                /*
+                the event remains in the cpu for a duration 
+                equal to the quantum, it is then updated 
+                with what remains
+                */
+                e->duration-=curr_quantum;
+                qe->duration=e->duration;
+                List_pushFront(&run->events,(ListItem*)qe);
+
+                ListItem* ret = List_detach(&os->running,(ListItem*)run);
+                FakePCB* min = (FakePCB*)minBurst(&os->ready);
+                if(!min){
+                    printf("Process NULL\n");
+                    return -1;
+                }
+                if(!min->events.first){
+                    printf("Process not event\n");
+                    return -1;
+                }
+                ProcessEvent* e_min = (ProcessEvent*)min->events.first;
+                if(e_min->type != CPU){
+                    printf("No CPU\n");
+                    return -1;
+                }
+                List_pushBack(&os->running,(ListItem*)min);
+                List_pushBack(&os->ready,(ListItem*)ret);
+                return 1;
+            }else return 0;
+        }else printf("pid: %d, no event cpu\n", run->pid);
+    }else printf("pid: %d, no event found\n", run->pid);
+    return -1;
+}
+
+void choiceProcessFreeCPU(FakeOS *os){
+    if(os == 0) return;
+    printf("Free CPU\n");
+    FakePCB* p = (FakePCB*)List_popFront(&os->ready);
+    List_pushBack(&os->running,(ListItem*)p);
+    return;
+}
+
+void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
+    if(os == 0 || curr_quantum < 0) return;
+    printf("busy CPU\n");
+    printf("curr quantum = %d\n", curr_quantum);
+    int flag = 0;
+    //Preemptive
+    ListItem* aux = os->running.first;
+    while(aux){
+        FakePCB* run = (FakePCB*)aux;
+        if(timeoutQuantum(os,run,curr_quantum)){
+            printf("pid: %d, timeout\n",run->pid);
+            flag = 1;
+        }
+        aux=aux->next;
+    }
+
+    if(flag == 1) return;
+
+    //CPU busy
+    cpuBusy(os);
+    return;
+    
 }
 
 void schedSJF(FakeOS *os, void *args_){
