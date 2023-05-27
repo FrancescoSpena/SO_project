@@ -1,5 +1,5 @@
 # [Sistemi Operativi]CPU Scheduler Simulator
 
-Hey... Really interested to project? Find out the TODO <br />
+Hey... Really interested to project? Find out the [wiki](https://github.com/FrancescoSpena/SO_project/wiki) <br />
 
 
