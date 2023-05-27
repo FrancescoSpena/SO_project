@@ -14,12 +14,12 @@ int main(int argc, char **argv){
         return 0;
     }
 
-    printf("Go the carousel\n");
+    printf("GO\n");
     int num_cpu = atoi(argv[1]);
 
     //a little bit of "balsamo"
     if(num_cpu <=0){
-        printf("\na system with 0 cpu? :(\n");
+        printf("\nA system with %d cpu? :(\n",num_cpu);
         printf("I set it for you to 1\n");
         printf("------------------------\n\n");
         FakeOS_init(&os, 1);
@@ -47,7 +47,7 @@ int main(int argc, char **argv){
         }
     }
     printf("\nnum core selected %d\n", os.tot_num_cpu);
-    printf("num processes in queue %d\n", os.processes.size);
+    printf("num processes in queue %d\n\n", os.processes.size);
 
     while (os.running.first || 
            os.ready.first || 

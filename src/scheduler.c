@@ -159,6 +159,7 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
         List_pushBack(&os->running,(ListItem*)ret);
         i--;
     }
+    free(temp);
 
 
     if(flag == 1) return;

@@ -205,7 +205,7 @@ void FakeOS_simStep(FakeOS* os){
     //Routine for running queue
     handlerRunningProcess(os);
 
-    printf("Call scheduler\n");
+    //printf("Call scheduler\n");
     // call schedule, if defined
     if (os->schedule_fn){
         (*os->schedule_fn)(os, os->schedule_args); 
@@ -216,6 +216,7 @@ void FakeOS_simStep(FakeOS* os){
         assert(ret);
     }
 
+    pidProcess(&os->ready,"ready");
     
     ++os->timer;
 
