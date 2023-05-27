@@ -1,5 +1,7 @@
 #include "../include/scheduler.h"
 
+
+
 /*
 ##########internal function###############
 */
@@ -29,6 +31,8 @@ ListItem *minBurst(ListHead *ready){
 //Update value of quantum
 void updateQuantum(SchedSJFArgs *a){
     a->next_quantum = a->alpha * a->curr_quantum + (1 - a->alpha) * a->pred_quantum;
+    a->pred_quantum = a->curr_quantum;
+    a->curr_quantum=a->next_quantum;
 }
 
 //routine for cpu busy
@@ -52,19 +56,27 @@ void cpuBusy(FakeOS* os){
 
     if(max > 0){
         FakePCB* min = (FakePCB*)minBurst(&os->ready);
-        printf("pid max: %d, pid min: %d\n", change->pid,min->pid);
+        #ifdef DEBUG
+        printf("[Debug] pid max: %d, pid min: %d\n", change->pid,min->pid);
+        #endif
         ProcessEvent* e_change = (ProcessEvent*)change->events.first;
         if(!min){
-            printf("Process NULL\n");
+            #ifdef DEBUG
+            printf("[Debug] Process NULL\n");
+            #endif
             return;
         }
         if(!min->events.first){
-            printf("Process not event\n");
+            #ifdef DEBUG
+            printf("[Debug] Process not event\n");
+            #endif
             return;
         }
         ProcessEvent* e_min = (ProcessEvent*)min->events.first;
         if(e_min->type != CPU){
-            printf("No CPU\n");
+            #ifdef DEBUG
+            printf("[Debug] No CPU\n");
+            #endif
             return;
         }
         if(e_change->duration > e_min->duration){
@@ -73,12 +85,16 @@ void cpuBusy(FakeOS* os){
             ListItem* ret = List_detach(&os->running,(ListItem*)change);
             List_pushBack(&os->running,(ListItem*)min);
             List_pushBack(&os->ready,(ListItem*)ret);
-            printf("Process change\n");
+            #ifdef SCHEDULER
+            printf("[Scheduler] find min burst, change\n");
+            #endif
             return;
         }
         //if not change the min process re-add to ready 
         List_pushBack(&os->ready,(ListItem*)min);
-        printf("Process not change\n");
+        #ifdef SCHEDULER
+        printf("[Scheduler] find min burst, not change\n");
+        #endif
     }
     return;
 }
@@ -105,31 +121,47 @@ int timeoutQuantum(FakeOS* os, FakePCB* run, ListHead* temp, int curr_quantum){
                 ListItem* ret = List_detach(&os->running,(ListItem*)run);
                 FakePCB* min = (FakePCB*)minBurst(&os->ready);
                 if(!min){
-                    printf("Process NULL\n");
+                    #ifdef DEBUG
+                    printf("[Debug] Process NULL\n");
+                    #endif
                     return -1;
                 }
                 if(!min->events.first){
-                    printf("Process not event\n");
+                    #ifdef DEBUG
+                    printf("[Debug] Process not event\n");
+                    #endif
                     return -1;
                 }
                 ProcessEvent* e_min = (ProcessEvent*)min->events.first;
                 if(e_min->type != CPU){
-                    printf("No CPU\n");
+                    #ifdef DEBUG
+                    printf("[Debug] No CPU\n");
+                    #endif
                     return -1;
                 }
                 List_pushBack(temp,(ListItem*)min);
                 List_pushBack(&os->ready,(ListItem*)ret);
                 return 1;
             }else return 0;
-        }else printf("pid: %d, no event cpu\n", run->pid);
-    }else printf("pid: %d, no event found\n", run->pid);
+        }else{
+            #ifdef DEBUG
+            printf("[Debug] pid: %d, no event cpu\n", run->pid); 
+            #endif
+        }
+    }else{
+        #ifdef DEBUG
+        printf("[Debug] pid: %d, no event found\n", run->pid);
+        #endif
+    }
     return -1;
 }
 
 //routine to free cpu
 void choiceProcessFreeCPU(FakeOS *os){
     if(os == 0) return;
-    printf("Free CPU\n");
+    #ifdef DEBUG
+    printf("[Debug] Free CPU\n");
+    #endif
     FakePCB* p = (FakePCB*)List_popFront(&os->ready);
     List_pushBack(&os->running,(ListItem*)p);
     return;
@@ -138,7 +170,9 @@ void choiceProcessFreeCPU(FakeOS *os){
 //routine to busy cpu
 void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     if(os == 0 || curr_quantum < 0) return;
-    printf("All CPU busy\n");
+    #ifdef DEBUG
+    printf("[Debug] All CPU busy\n");
+    #endif
     int flag = 0;
     ListHead* temp = (ListHead*)malloc(sizeof(ListHead));
     List_init(temp);
@@ -147,7 +181,12 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
     while(aux){
         FakePCB* run = (FakePCB*)aux;
         if(timeoutQuantum(os,run,temp,curr_quantum)){
-            printf("pid: %d, timeout, quantum set to: %d\n",run->pid,curr_quantum);
+            #ifdef SCHEDULER
+            printf("[Scheduler] timeout pid: %d, change\n",run->pid);
+            #endif
+            #ifdef DEBUG
+            printf("[Debug] pid: %d, timeout, quantum set to: %d\n",run->pid,curr_quantum);
+            #endif
             aux=os->running.first;
             flag = 1;
         }else aux=aux->next;
@@ -171,7 +210,7 @@ void choiceProcessBusyCPU(FakeOS *os, int curr_quantum){
 }
 
 /*
-##########internal function###############
+##########external function###############
 */
 
 //scheduler
@@ -180,11 +219,18 @@ void schedSJF(FakeOS *os, void *args_){
     SchedSJFArgs* args = (SchedSJFArgs*)args_;
 
     if(os->ready.first == 0){
-        printf("No ready processes\n");
+        #ifdef SCHEDULER
+        printf("[Scheduler] no ready processes\n");
+        #endif
         return;
     }
 
+    
     updateQuantum(args);
+    #ifdef DEBUG
+    printf("[Debug] quantum set to: %d\n",args->curr_quantum);
+    #endif
+
 
     if(os->running.size < os->tot_num_cpu){
         choiceProcessFreeCPU(os);
