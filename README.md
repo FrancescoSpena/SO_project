@@ -1,5 +1,5 @@
-# SO_project
+# [Sistemi Operativi]CPU Scheduler Simulator
 
-Qui il super progetto di sistemi operativi!!! <br />
-Implementato un CPU Scheduling Simulator Multicore <br />
+Hey... Really interested to project? Find out the TODO <br />
+
 
