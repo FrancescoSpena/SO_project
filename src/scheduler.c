@@ -10,8 +10,7 @@ ListItem *minBurst(ListHead *ready){
 
     ListItem* aux = (ListItem*)ready->first;
     int min = 1000;
-    FakePCB* min_proc = (FakePCB*)malloc(sizeof(FakePCB));
-    assert(min_proc);
+    FakePCB* min_proc = 0;
     while(aux){
         FakePCB* r = (FakePCB*)aux;
         if(r->events.first != 0){
