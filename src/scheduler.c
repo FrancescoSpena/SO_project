@@ -38,8 +38,7 @@ void cpuBusy(FakeOS* os){
     if(os == 0) return;
     ListItem* aux = os->running.first;
     int max = 0;
-    FakePCB* change = (FakePCB*)malloc(sizeof(FakePCB));
-    assert(change);
+    FakePCB* change = 0;
     while(aux){
         FakePCB* run = (FakePCB*)aux;
         if(run->events.first){
