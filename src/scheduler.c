@@ -1,7 +1,5 @@
 #include "../include/scheduler.h"
 
-
-
 /*
 ##########internal function###############
 */
@@ -35,7 +33,7 @@ void updateQuantum(SchedSJFArgs *a){
     a->curr_quantum=a->next_quantum;
 }
 
-//routine for cpu busy
+//process with max burst
 void cpuBusy(FakeOS* os){
     if(os == 0) return;
     ListItem* aux = os->running.first;
