@@ -31,6 +31,13 @@ void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
         aux=aux->next;
     }
 
+    aux=os->running.first;
+    while(aux){
+        FakePCB* pcb=(FakePCB*)aux;
+        assert(pcb->pid!=p->pid && "pid taken");
+        aux=aux->next;
+    }
+
     aux=os->waiting.first;
     while(aux){
         FakePCB* pcb=(FakePCB*)aux;
