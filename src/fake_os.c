@@ -65,7 +65,6 @@ void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
         break;
     default:
         assert(0 && "illegal resource");
-        ;
     }
 }
 
