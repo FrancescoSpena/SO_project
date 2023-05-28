@@ -24,7 +24,6 @@ ListItem *minBurst(ListHead *ready){
         aux=aux->next;
     }
     ListItem* ret = List_detach(ready,(ListItem*)min_proc);
-    free(min_proc);
     return ret;
 }
 
@@ -85,7 +84,6 @@ void cpuBusy(FakeOS* os){
             ListItem* ret = List_detach(&os->running,(ListItem*)change);
             List_pushBack(&os->running,(ListItem*)min);
             List_pushBack(&os->ready,(ListItem*)ret);
-            free(change);
             #ifdef SCHEDULER
             printf("[Scheduler] find min burst, change\n");
             #endif
