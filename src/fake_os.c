@@ -24,14 +24,7 @@ void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
     assert(p->arrival_time==os->timer && "time mismatch in creation");
     //check if the running, ready or waiting list have the same pid
     
-    ListItem* aux=os->running.first;
-    while(aux){
-        FakePCB* pcb=(FakePCB*)aux;
-        assert(pcb->pid!=p->pid && "pid taken");
-        aux=aux->next;
-    }
-
-    aux=os->ready.first;
+    ListItem* aux=os->ready.first;
     while(aux){
         FakePCB* pcb=(FakePCB*)aux;
         assert(pcb->pid!=p->pid && "pid taken");
