@@ -221,3 +221,45 @@ void FakeOS_simStep(FakeOS* os){
     ++os->timer;
 
 }
+
+//Destroy
+void FakeOS_destroy(FakeOS* os){
+    if(!os) return;
+    os->tot_num_cpu=0;
+    os->timer=0;
+    os->schedule_fn=0;
+    os->schedule_args=0;
+
+    ListItem* aux = os->processes.first;
+    while(aux){
+        FakePCB* pcb = (FakePCB*)aux;
+        ListItem* ret = List_detach(&os->processes,(ListItem*)pcb);
+        free(ret);
+        aux=aux->next;
+    }
+
+    aux = os->ready.first;
+    while(aux){
+        FakePCB* pcb = (FakePCB*)aux;
+        ListItem* ret = List_detach(&os->ready,(ListItem*)pcb);
+        free(ret);
+        aux=aux->next;
+    }
+
+    aux = os->waiting.first;
+    while(aux){
+        FakePCB* pcb = (FakePCB*)aux;
+        ListItem* ret = List_detach(&os->waiting,(ListItem*)pcb);
+        free(ret);
+        aux=aux->next;
+    }
+
+    aux = os->running.first;
+    while(aux){
+        FakePCB* pcb = (FakePCB*)aux;
+        ListItem* ret = List_detach(&os->running,(ListItem*)pcb);
+        free(ret);
+        aux=aux->next;
+    }
+    return;
+}

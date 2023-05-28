@@ -26,3 +26,5 @@ typedef struct FakeOS{
 void FakeOS_init(FakeOS* os, int num_cpu);
 //Implement one step of simulation
 void FakeOS_simStep(FakeOS* os);
+//Destroy
+void FakeOS_destroy(FakeOS* os);
