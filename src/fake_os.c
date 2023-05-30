@@ -50,6 +50,9 @@ void FakeOS_createProcess(FakeOS* os, FakeProcess* p){
     new_pcb->list.next=new_pcb->list.prev=0;
     new_pcb->pid=p->pid;
     new_pcb->events=p->events;
+    new_pcb->duration_time=0;
+    new_pcb->start_time=0;
+    new_pcb->update=0;
 
     assert(new_pcb->events.first && "process without events");
 
@@ -150,7 +153,6 @@ void handlerWaitingProcess(FakeOS* os){
 //Routine for running process
 void handlerRunningProcess(FakeOS* os){
     if(os == 0) return;
-
     pidProcess(&os->running,"running");
     ListItem* aux = (ListItem*)os->running.first;
     while(aux){
@@ -172,13 +174,17 @@ void handlerRunningProcess(FakeOS* os){
                 switch(e->type){
                     case CPU:
                         printf("\t\tpid: %d, move to ready\n", run->pid);
-                        ListItem* ret = List_detach(&os->running,(ListItem*)run);
-                        List_pushBack(&os->ready,ret);
+                        FakePCB* ret = (FakePCB*)List_detach(&os->running,(ListItem*)run);
+                        ret->duration_time = os->timer - ret->start_time;
+                        ret->update=0;
+                        List_pushBack(&os->ready,(ListItem*)ret);
                         break;
                     case IO:
                         printf("\t\tpid: %d, move to waiting\n", run->pid);
-                        ret = List_detach(&os->running,(ListItem*)run);
-                        List_pushBack(&os->waiting,ret);
+                        ret = (FakePCB*)List_detach(&os->running,(ListItem*)run);
+                        ret->duration_time = os->timer - ret->start_time;
+                        ret->update=0;
+                        List_pushBack(&os->waiting,(ListItem*)ret);
                         break;
                     default:
                         assert("illegal source\n");
@@ -206,7 +212,6 @@ void FakeOS_simStep(FakeOS* os){
     //Routine for running queue
     handlerRunningProcess(os);
 
-    //printf("Call scheduler\n");
     // call schedule, if defined
     if (os->schedule_fn){
         (*os->schedule_fn)(os, os->schedule_args); 

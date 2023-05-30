@@ -5,11 +5,10 @@
 #pragma once
 
 typedef struct{
-    int next_quantum;
-    int curr_quantum;
-    int pred_quantum;
+    float curr_quantum;
     float alpha;
-} SchedSJFArgs;
+}SchedSJFArgs;
+
 
 //Scheduler SJF preemptive
 void schedSJF(FakeOS *os, void *args_);

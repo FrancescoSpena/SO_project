@@ -27,10 +27,8 @@ int main(int argc, char **argv){
 
     // scheduler args
     SchedSJFArgs srr_args;
-    srr_args.curr_quantum = 7;
-    srr_args.pred_quantum = 0;
+    srr_args.curr_quantum = 4;
     srr_args.alpha = 0.5;
-    srr_args.next_quantum = 0;
     os.schedule_fn = schedSJF;
     os.schedule_args = &srr_args;
 

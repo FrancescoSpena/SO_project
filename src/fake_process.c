@@ -89,4 +89,3 @@ int FakeProcess_save(const FakeProcess* p, const char* filename){
   fclose(f);
   return num_events;
 }
-  

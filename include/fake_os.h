@@ -6,6 +6,10 @@ typedef struct{
     ListItem list;
     int pid;
     ListHead events;
+    int start_time;
+    int duration_time;
+    float prediction_time;
+    int update;
 }FakePCB;
 
 struct FakeOS;
