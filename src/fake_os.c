@@ -175,14 +175,18 @@ void handlerRunningProcess(FakeOS* os){
                     case CPU:
                         printf("\t\tpid: %d, move to ready\n", run->pid);
                         FakePCB* ret = (FakePCB*)List_detach(&os->running,(ListItem*)run);
+                        //calculate a duration time 
                         ret->duration_time = os->timer - ret->start_time;
+                        //ready to update a prediction
                         ret->update=0;
                         List_pushBack(&os->ready,(ListItem*)ret);
                         break;
                     case IO:
                         printf("\t\tpid: %d, move to waiting\n", run->pid);
                         ret = (FakePCB*)List_detach(&os->running,(ListItem*)run);
+                        //calculate a duration time 
                         ret->duration_time = os->timer - ret->start_time;
+                        //ready to update a prediction
                         ret->update=0;
                         List_pushBack(&os->waiting,(ListItem*)ret);
                         break;

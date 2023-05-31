@@ -9,7 +9,7 @@ typedef struct{
     int start_time;
     int duration_time;
     float prediction_time;
-    int update;
+    int update; //to update the prediction at the right time
 }FakePCB;
 
 struct FakeOS;

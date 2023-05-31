@@ -19,6 +19,7 @@ FakePCB* minBurstPrediction(ListHead* ready){
     return (FakePCB*)List_detach(ready,(ListItem*)min);
 }
 
+//Updates the predictions of processes that have just exited the running state
 void updatePrediction(ListHead* ready, SchedSJFArgs* args){
     ListItem* aux = ready->first;
     while(aux){
@@ -26,6 +27,7 @@ void updatePrediction(ListHead* ready, SchedSJFArgs* args){
         #ifdef SCHEDULER
         printf("pid: %d, duration time: %d\n", pcb->pid,pcb->duration_time);
         #endif
+        //if update = 0 the process is ready to update a prediction, there is a new duration_time
         if(pcb->prediction_time == 0 || pcb->update==0){
             pcb->prediction_time = args->alpha * pcb->duration_time + (1 - args->alpha) * pcb->prediction_time;
             pcb->update=1;
@@ -42,6 +44,7 @@ void updatePrediction(ListHead* ready, SchedSJFArgs* args){
 //routine to free cpu
 void choiceProcessFreeCPU(FakeOS *os, SchedSJFArgs* args){
     updatePrediction(&os->ready,args);
+    //Now this function return a process with min prediction burst (no glass ball)
     FakePCB* min = minBurstPrediction(&os->ready);
     #ifdef SCHEDULER
     printf("min pid: %d, pred: %f\n", min->pid,min->prediction_time);
